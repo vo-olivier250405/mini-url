@@ -2,6 +2,7 @@ import { db } from "../db/index.js";
 import { Hono } from "hono";
 import { urlsTable } from "../db/schema.js";
 import { eq } from "drizzle-orm";
+import { isValidUrl } from "../lib/index.js";
 
 const urlsRoute = new Hono();
 
@@ -22,14 +23,16 @@ urlsRoute.get("/", async (c) => {
 // })
 
 urlsRoute.post("/", async (c) => {
-    const {longUrl} = await c.req.json();
-    const shortId = crypto.randomUUID()
-    const shortUrl = `${process.env.BASE_URL || "http://localhost:3000"}/${shortId}`
-    const data = {longUrl, shortId, shortUrl}
-    const newUrl = await db.insert(urlsTable).values(data)
+    const { longUrl } = await c.req.json();
+    if (!isValidUrl(longUrl)) return c.json({error: "You need to provide a valid url."}, 400)
 
-    return c.json(newUrl)
-})
+    const shortId = crypto.randomUUID();
+    const shortUrl = `${process.env.BASE_URL || "http://localhost:3000"}/${shortId}`;
+
+    const [newUrl] = await db.insert(urlsTable).values({ longUrl, shortId, shortUrl }).returning();
+
+    return c.json(newUrl);
+});
 
 urlsRoute.get("/:shortId", async (c) => {
     const shortId = c.req.param("shortId")
