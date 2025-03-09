@@ -4,7 +4,8 @@
   "scripts": {
     "dev": "tsx watch src/index.ts",
     "db:generate": "drizzle-kit generate",
-    "db:migrate": "drizzle-kit migrate"
+    "db:migrate": "drizzle-kit migrate",
+    "db:reset": "rm -rf drizzle; rm ./db.sqlite; echo 'Drop database'; drizzle-kit generate; drizzle-kit migrate"
   },
   "dependencies": {
     "@hono/node-server": "^1.13.8",
@@ -12,7 +13,8 @@
     "better-sqlite3": "^11.8.1",
     "dotenv": "^16.4.7",
     "drizzle-orm": "^0.40.0",
-    "hono": "^4.7.4"
+    "hono": "^4.7.4",
+    "nanoid": "^5.1.3"
   },
   "devDependencies": {
     "@types/node": "^20.11.17",

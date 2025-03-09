@@ -7,6 +7,7 @@ import { useMutation } from "@tanstack/react-query";
 import { post } from "./lib/queries";
 import { toast } from "sonner";
 import CoptyTextButton from "./components/CopyTextButton";
+import HistorySheet from "./components/HistorySheet";
 
 function App() {
   const [url, setUrl] = useState("");
@@ -31,6 +32,7 @@ function App() {
 
   return (
     <main className="w-full h-screen flex flex-col gap-4 p-4">
+      <HistorySheet />
       <div className="flex flex-col gap-1 items-center justify-center">
         <h1 className="font-bold text-7xl text-center m-4">MINI-URL</h1>
         <i className="text-2xl">Shrink your url</i>

@@ -1,8 +1,9 @@
 import { db } from "../db/index.js";
 import { Hono } from "hono";
 import { urlsTable } from "../db/schema.js";
-import { eq } from "drizzle-orm";
+import { eq, sql } from "drizzle-orm";
 import { isValidUrl } from "../lib/index.js";
+import { nanoid } from "nanoid"
 
 const urlsRoute = new Hono();
 
@@ -26,7 +27,7 @@ urlsRoute.post("/", async (c) => {
     const { longUrl } = await c.req.json();
     if (!isValidUrl(longUrl)) return c.json({error: "You need to provide a valid url."}, 400)
 
-    const shortId = crypto.randomUUID();
+    const shortId = nanoid(6);
     const shortUrl = `${process.env.BASE_URL || "http://localhost:3000"}/${shortId}`;
 
     const [newUrl] = await db.insert(urlsTable).values({ longUrl, shortId, shortUrl }).returning();
@@ -44,4 +45,21 @@ urlsRoute.get("/:shortId", async (c) => {
     return c.json({error: "URL not found"}, 404)
     
 })
+
+urlsRoute.get("/history/", async (c) => {
+    const urls = await db.select({
+        date: sql`strftime('%Y-%m-%d', createdAt)`,
+        urls: sql.raw(`json_group_array(json_object(
+            'id', id, 'shortId', shortId, 'longUrl', longUrl, 'shortUrl', shortUrl
+        ))`).as("urls")
+    })
+    .from(urlsTable)
+    .groupBy(sql`strftime('%Y-%m-%d', createdAt)`);
+
+    return c.json(urls.map((row: any) => ({
+        date: row.date,
+        urls: JSON.parse(row.urls)
+    })));
+});
+
 export default urlsRoute
